@@ -87,6 +87,23 @@ class EditableBox:
             ix, iy = self.get_img_coords(event.x, event.y)
             ix = max(0, min(self.max_w - 1, ix))
             iy = max(0, min(self.max_h - 1, iy))
+            
+            # If Shift is held, snap lines to be horizontal/vertical relative to canvas
+            if event.state & 0x0001 and len(self.points) == 4:
+                i = self.active_handle
+                opp = (i + 2) % 4
+                prev = (i - 1) % 4
+                next_ = (i + 1) % 4
+                
+                x_opp, y_opp = self.points[opp]
+                
+                if i % 2 == 0:
+                    self.points[prev] = [ix, y_opp]
+                    self.points[next_] = [x_opp, iy]
+                else:
+                    self.points[prev] = [x_opp, iy]
+                    self.points[next_] = [ix, y_opp]
+
             self.points[self.active_handle] = [ix, iy]
             self.draw()
             if self.on_change:
@@ -123,6 +140,14 @@ class AutoCropApp:
         self.offset_y = 0
         
         self.create_widgets()
+        
+        # Bind keyboard shortcuts
+        self.root.bind("<Tab>", self.next_photo)
+        self.root.bind("<Shift-Tab>", self.prev_photo)
+        self.root.bind("<ISO_Left_Tab>", self.prev_photo)
+        self.root.bind("<Left>", self.rotate_left)
+        self.root.bind("<Right>", self.rotate_right)
+        
         self.root.after(100, self.process_queue)
 
     def create_widgets(self):
@@ -165,6 +190,7 @@ class AutoCropApp:
         ttk.Button(toolbar, text="↶ Obróć zdjęcie w lewo", command=lambda: self.rotate_all(-1)).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text="Obróć zdjęcie w prawo ↷", command=lambda: self.rotate_all(1)).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text="+ Dodaj brakujące zdjęcie", command=self.add_new_box).pack(side=tk.LEFT, padx=20)
+        ttk.Button(toolbar, text="⌨️ Skróty klawiszowe", command=self.show_shortcuts_info).pack(side=tk.LEFT, padx=5)
         
         ttk.Button(toolbar, text="💾 Zapisz z tego skanu", command=self.save_current).pack(side=tk.RIGHT, padx=5)
         
@@ -497,6 +523,122 @@ class AutoCropApp:
             total += self._save_file(f)
         self.update_status(f"Pomyślnie zapisano łącznie {total} zdjęć.")
         messagebox.showinfo("Zapisano", f"Zapisano łącznie {total} zdjęć ze wszystkich skanów.")
+
+    def rotate_left(self, event=None):
+        focused = self.root.focus_get()
+        if isinstance(focused, (tk.Entry, ttk.Entry)):
+            return
+        self.rotate_all(-1)
+        return "break"
+
+    def rotate_right(self, event=None):
+        focused = self.root.focus_get()
+        if isinstance(focused, (tk.Entry, ttk.Entry)):
+            return
+        self.rotate_all(1)
+        return "break"
+
+    def next_photo(self, event=None):
+        if not self.file_list: return "break"
+        selection = self.listbox.curselection()
+        if selection:
+            current_idx = selection[0]
+            next_idx = (current_idx + 1) % len(self.file_list)
+        else:
+            next_idx = 0
+        self.listbox.selection_clear(0, tk.END)
+        self.listbox.selection_set(next_idx)
+        self.listbox.see(next_idx)
+        self.on_select_file(None)
+        return "break"
+
+    def prev_photo(self, event=None):
+        if not self.file_list: return "break"
+        selection = self.listbox.curselection()
+        if selection:
+            current_idx = selection[0]
+            prev_idx = (current_idx - 1) % len(self.file_list)
+        else:
+            prev_idx = len(self.file_list) - 1
+        self.listbox.selection_clear(0, tk.END)
+        self.listbox.selection_set(prev_idx)
+        self.listbox.see(prev_idx)
+        self.on_select_file(None)
+        return "break"
+
+    def show_shortcuts_info(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Skróty klawiszowe")
+        dialog.configure(bg="#2b2b2b")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        dialog.update_idletasks()
+        w = 480
+        h = 320
+        x = self.root.winfo_x() + (self.root.winfo_width() - w) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - h) // 2
+        dialog.geometry(f"{w}x{h}+{x}+{y}")
+        dialog.resizable(False, False)
+        
+        title_lbl = tk.Label(
+            dialog, 
+            text="Skróty klawiszowe w AutoCrop", 
+            font=("Helvetica", 14, "bold"), 
+            bg="#2b2b2b", 
+            fg="#00ffff"
+        )
+        title_lbl.pack(pady=(20, 15))
+        
+        list_frame = tk.Frame(dialog, bg="#2b2b2b")
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=25)
+        
+        shortcuts = [
+            ("Tab", "Następne zdjęcie / skan"),
+            ("Shift + Tab", "Poprzednie zdjęcie / skan"),
+            ("←  (Strzałka w lewo)", "Obróć skan w lewo (o 90°)"),
+            ("→  (Strzałka w prawo)", "Obróć skan w prawo (o 90°)"),
+            ("Shift + Przeciąganie", "Prostowanie linii (pion / poziom)")
+        ]
+        
+        for idx, (keys, desc) in enumerate(shortcuts):
+            key_btn = tk.Label(
+                list_frame, 
+                text=keys, 
+                font=("Consolas", 10, "bold"), 
+                bg="#3c3f41", 
+                fg="#ffffff", 
+                padx=8, 
+                pady=3,
+                bd=1,
+                relief="raised"
+            )
+            key_btn.grid(row=idx, column=0, sticky="e", padx=(0, 15), pady=8)
+            
+            desc_lbl = tk.Label(
+                list_frame, 
+                text=desc, 
+                font=("Helvetica", 10), 
+                bg="#2b2b2b", 
+                fg="#e0e0e0"
+            )
+            desc_lbl.grid(row=idx, column=1, sticky="w", pady=8)
+            
+        close_btn = tk.Button(
+            dialog, 
+            text="Zamknij", 
+            command=dialog.destroy, 
+            font=("Helvetica", 10, "bold"),
+            bg="#3c3f41", 
+            fg="#ffffff", 
+            activebackground="#505355", 
+            activeforeground="#ffffff", 
+            bd=0, 
+            padx=20, 
+            pady=6,
+            cursor="hand2"
+        )
+        close_btn.pack(pady=(10, 20))
 
     def update_status(self, msg):
         self.status_var.set(msg)
