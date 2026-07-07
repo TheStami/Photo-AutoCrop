@@ -160,23 +160,23 @@ class AutoCropApp:
         left_frame = ttk.Frame(main_pane, width=320)
         main_pane.add(left_frame, weight=1)
         
-        ttk.Label(left_frame, text="Folder wejściowy (skany):").pack(anchor=tk.W, pady=(0, 2))
+        ttk.Label(left_frame, text="Input folder (scans):").pack(anchor=tk.W, pady=(0, 2))
         ttk.Entry(left_frame, textvariable=self.input_dir, state="readonly").pack(fill=tk.X)
-        ttk.Button(left_frame, text="Wybierz...", command=self.browse_input).pack(fill=tk.X, pady=(2, 10))
+        ttk.Button(left_frame, text="Browse...", command=self.browse_input).pack(fill=tk.X, pady=(2, 10))
         
-        ttk.Label(left_frame, text="Folder wyjściowy (pojedyncze zdjęcia):").pack(anchor=tk.W, pady=(0, 2))
+        ttk.Label(left_frame, text="Output folder (individual photos):").pack(anchor=tk.W, pady=(0, 2))
         ttk.Entry(left_frame, textvariable=self.output_dir, state="readonly").pack(fill=tk.X)
-        ttk.Button(left_frame, text="Wybierz...", command=self.browse_output).pack(fill=tk.X, pady=(2, 10))
+        ttk.Button(left_frame, text="Browse...", command=self.browse_output).pack(fill=tk.X, pady=(2, 10))
         
-        self.start_btn = ttk.Button(left_frame, text="Uruchom analizę AI w tle", command=self.start_processing)
+        self.start_btn = ttk.Button(left_frame, text="Run background AI analysis", command=self.start_processing)
         self.start_btn.pack(fill=tk.X, pady=(0, 10))
         
-        ttk.Label(left_frame, text="Zeskanowane pliki:").pack(anchor=tk.W)
+        ttk.Label(left_frame, text="Scanned files:").pack(anchor=tk.W)
         self.listbox = tk.Listbox(left_frame, font=("Courier", 10))
         self.listbox.pack(fill=tk.BOTH, expand=True)
         self.listbox.bind('<<ListboxSelect>>', self.on_select_file)
         
-        ttk.Button(left_frame, text="Zapisz WSZYSTKIE gotowe", command=self.save_all).pack(fill=tk.X, pady=(10, 0))
+        ttk.Button(left_frame, text="Save ALL ready", command=self.save_all).pack(fill=tk.X, pady=(10, 0))
         
         # MIDDLE PANEL (editor)
         middle_frame = ttk.Frame(main_pane)
@@ -189,29 +189,29 @@ class AutoCropApp:
         toolbar = ttk.Frame(middle_frame)
         toolbar.pack(fill=tk.X, pady=10)
         
-        ttk.Button(toolbar, text="↶ Obróć zdjęcie w lewo", command=lambda: self.rotate_all(-1)).pack(side=tk.LEFT, padx=5)
-        ttk.Button(toolbar, text="Obróć zdjęcie w prawo ↷", command=lambda: self.rotate_all(1)).pack(side=tk.LEFT, padx=5)
-        ttk.Button(toolbar, text="+ Dodaj brakujące zdjęcie", command=self.add_new_box).pack(side=tk.LEFT, padx=20)
-        ttk.Button(toolbar, text="⌨️ Skróty klawiszowe", command=self.show_shortcuts_info).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="↶ Rotate image left", command=lambda: self.rotate_all(-1)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Rotate image right ↷", command=lambda: self.rotate_all(1)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="+ Add missing image", command=self.add_new_box).pack(side=tk.LEFT, padx=20)
+        ttk.Button(toolbar, text="⌨️ Keyboard shortcuts", command=self.show_shortcuts_info).pack(side=tk.LEFT, padx=5)
         
-        ttk.Button(toolbar, text="💾 Zapisz z tego skanu", command=self.save_current).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(toolbar, text="💾 Save from this scan", command=self.save_current).pack(side=tk.RIGHT, padx=5)
         
         # RIGHT PANEL (preview)
         right_frame = ttk.Frame(main_pane, width=350)
         main_pane.add(right_frame, weight=2)
         
-        self.preview_title = ttk.Label(right_frame, text="Podgląd przycięcia (aktywny obszar):", font=("Helvetica", 10, "bold"))
+        self.preview_title = ttk.Label(right_frame, text="Crop preview (active area):", font=("Helvetica", 10, "bold"))
         self.preview_title.pack(anchor=tk.W, pady=(0, 5))
         
         self.preview_canvas = tk.Canvas(right_frame, bg="#2b2b2b", highlightthickness=0)
         self.preview_canvas.pack(fill=tk.BOTH, expand=True)
         self.preview_canvas.bind("<Configure>", self.on_preview_resize)
         
-        self.preview_status_var = tk.StringVar(value="Wybierz obszar, aby zobaczyć podgląd")
+        self.preview_status_var = tk.StringVar(value="Select an area to view preview")
         self.preview_status_lbl = ttk.Label(right_frame, textvariable=self.preview_status_var, font=("Helvetica", 9, "italic"))
         self.preview_status_lbl.pack(anchor=tk.W, pady=(5, 0))
         
-        self.status_var = tk.StringVar(value="Gotowy. Kliknij 'Uruchom analizę AI w tle'.")
+        self.status_var = tk.StringVar(value="Ready. Click 'Run background AI analysis'.")
         ttk.Label(self.root, textvariable=self.status_var).pack(anchor=tk.W, padx=10, pady=5)
         
     def rotate_all(self, direction):
@@ -246,7 +246,7 @@ class AutoCropApp:
             box.clear()
             box.draw()
             
-        self.update_status("Obrócono całe zdjęcie (skan). Punkty zaktualizowały się automatycznie.")
+        self.update_status("Rotated whole image (scan). Points updated automatically.")
         self.update_preview()
             
     def add_new_box(self):
@@ -268,7 +268,7 @@ class AutoCropApp:
         self.active_box = box
         self.current_boxes.append(box)
         
-        self.update_status("Dodano nowy obszar. Przesuń punkty narożne.")
+        self.update_status("Added new area. Move the corner points.")
         self.update_preview()
 
     def on_box_change(self, box, state):
@@ -285,20 +285,20 @@ class AutoCropApp:
     def update_preview(self):
         if self.current_img is None or not self.active_box:
             self.preview_canvas.delete("all")
-            self.preview_status_var.set("Wybierz obszar, aby zobaczyć podgląd")
+            self.preview_status_var.set("Select an area to view preview")
             return
         
         try:
             cropped = crop_and_warp(self.current_img, self.active_box.points)
             if cropped is not None and cropped.size > 0:
                 self.display_preview_image(cropped)
-                self.preview_status_var.set(f"Wymiary kadru: {cropped.shape[1]}x{cropped.shape[0]} px")
+                self.preview_status_var.set(f"Crop dimensions: {cropped.shape[1]}x{cropped.shape[0]} px")
             else:
                 self.preview_canvas.delete("all")
-                self.preview_status_var.set("Błąd podczas wycinania")
+                self.preview_status_var.set("Error during cropping")
         except Exception as e:
             self.preview_canvas.delete("all")
-            self.preview_status_var.set("Nieprawidłowy kształt obszaru")
+            self.preview_status_var.set("Invalid area shape")
 
     def display_preview_image(self, img):
         if img is None: return
@@ -340,7 +340,7 @@ class AutoCropApp:
         if hasattr(self, 'active_box') and self.active_box is not None:
             self.update_preview()
 
-    def ask_directory(self, title="Wybierz folder", initial_dir=None):
+    def ask_directory(self, title="Select folder", initial_dir=None):
         # 1. Try XDG Desktop Portal via DBus (100% native dialogs for KDE/GNOME, like web browsers use)
         portal_script = """
 import sys
@@ -368,7 +368,7 @@ try:
     portal = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
     iface = dbus.Interface(portal, 'org.freedesktop.portal.FileChooser')
     options = dbus.Dictionary({'directory': dbus.Boolean(True)}, signature='sv')
-    title = sys.argv[1] if len(sys.argv) > 1 else "Wybierz folder"
+    title = sys.argv[1] if len(sys.argv) > 1 else "Select folder"
     request_path = iface.OpenFile("", title, options)
     bus.add_signal_receiver(on_response, dbus_interface='org.freedesktop.portal.Request', signal_name='Response', path=request_path)
     loop = GLib.MainLoop()
@@ -392,7 +392,7 @@ except Exception:
                 elif not path:
                     return None  # User cancelled
         except Exception as e:
-            print(f"Błąd uruchamiania portalu DBus: {e}")
+            print(f"Error starting DBus portal: {e}")
 
         # 2. Try KDE kdialog if available (perfect for KDE/Dolphin users)
         if shutil.which("kdialog"):
@@ -407,7 +407,7 @@ except Exception:
             except subprocess.CalledProcessError:
                 return None
             except Exception as e:
-                print(f"Błąd uruchamiania kdialog: {e}")
+                print(f"Error starting kdialog: {e}")
 
         # 2. Try GTK zenity if available
         if shutil.which("zenity"):
@@ -422,17 +422,17 @@ except Exception:
             except subprocess.CalledProcessError:
                 return None
             except Exception as e:
-                print(f"Błąd uruchamiania zenity: {e}")
+                print(f"Error starting zenity: {e}")
 
         # 3. Fallback to default Tkinter filedialog
         return filedialog.askdirectory(title=title, initialdir=initial_dir)
 
     def browse_input(self):
-        folder = self.ask_directory(title="Wybierz folder wejściowy (skany)", initial_dir=self.input_dir.get())
+        folder = self.ask_directory(title="Select input folder (scans)", initial_dir=self.input_dir.get())
         if folder: self.input_dir.set(folder)
 
     def browse_output(self):
-        folder = self.ask_directory(title="Wybierz folder wyjściowy", initial_dir=self.output_dir.get())
+        folder = self.ask_directory(title="Select output folder", initial_dir=self.output_dir.get())
         if folder: self.output_dir.set(folder)
 
     def update_listbox(self):
@@ -453,11 +453,11 @@ except Exception:
         try:
             files = [f for f in os.listdir(in_dir) if os.path.splitext(f)[1].lower() in valid_extensions]
         except Exception:
-            self.update_status("Błąd: Folder wejściowy nie istnieje.")
+            self.update_status("Error: Input folder does not exist.")
             return
             
         if not files:
-            self.update_status("Brak plików graficznych w folderze wejściowym.")
+            self.update_status("No image files in input folder.")
             return
             
         self.file_list = files
@@ -467,7 +467,7 @@ except Exception:
             
         self.update_listbox()
         self.start_btn.config(state=tk.DISABLED)
-        self.update_status("Rozpoczęto analizę AI w tle. Możesz przeglądać gotowe wyniki.")
+        self.update_status("Background AI analysis started. You can browse ready results.")
         
         threading.Thread(target=self.worker_thread, args=(in_dir, files), daemon=True).start()
 
@@ -479,7 +479,7 @@ except Exception:
                 img, boxes = detect_boxes(path)
                 self.queue.put(('done', f, img, boxes))
             except Exception as e:
-                print(f"Błąd analizy {f}: {e}")
+                print(f"Error analyzing {f}: {e}")
                 img_fallback = cv2.imread(path)
                 self.queue.put(('done', f, img_fallback, []))
                 
@@ -500,8 +500,8 @@ except Exception:
                 self.update_listbox()
             elif msg_type == 'finish':
                 self.start_btn.config(state=tk.NORMAL)
-                messagebox.showinfo("Gotowe", "Analiza AI wszystkich skanów zakończona!")
-                self.update_status("Analiza w tle zakończona.")
+                messagebox.showinfo("Done", "AI analysis of all scans completed!")
+                self.update_status("Background analysis completed.")
         self.root.after(200, self.process_queue)
 
     def on_select_file(self, event):
@@ -516,17 +516,17 @@ except Exception:
         if data['status'] != 'ready':
             self.canvas.delete("all")
             self.preview_canvas.delete("all")
-            self.preview_status_var.set("Wybierz obszar, aby zobaczyć podgląd")
+            self.preview_status_var.set("Select an area to view preview")
             self.current_filename = None
             for b in self.current_boxes: b.clear()
             self.current_boxes = []
             self.active_box = None
-            self.update_status("Plik wciąż jest przetwarzany przez AI. Czekaj...")
+            self.update_status("File is still being processed by AI. Please wait...")
             return
             
         self.current_filename = filename
         self.current_img = data['img']
-        self.update_status(f"Podgląd: {filename}. Przeciągaj kropki, aby dopasować.")
+        self.update_status(f"Preview: {filename}. Drag dots to adjust.")
         
         self.root.update_idletasks()
         self.display_image(data['img'])
@@ -595,23 +595,23 @@ except Exception:
                 cv2.imwrite(out_path, cropped)
                 count += 1
             except Exception as e:
-                print(f"Błąd podczas zapisywania obszaru {count} pliku {filename}: {e}")
+                print(f"Error saving area {count} of file {filename}: {e}")
         return count
 
     def save_current(self):
         if not self.current_filename: return
         self.save_current_state_to_memory()
         c = self._save_file(self.current_filename)
-        self.update_status(f"Pomyślnie zapisano {c} zdjęć z pliku {self.current_filename}.")
-        messagebox.showinfo("Zapisano", f"Zapisano {c} ujęć z tego skanu.")
+        self.update_status(f"Successfully saved {c} photos from file {self.current_filename}.")
+        messagebox.showinfo("Saved", f"Saved {c} crops from this scan.")
 
     def save_all(self):
         self.save_current_state_to_memory()
         total = 0
         for f in self.file_list:
             total += self._save_file(f)
-        self.update_status(f"Pomyślnie zapisano łącznie {total} zdjęć.")
-        messagebox.showinfo("Zapisano", f"Zapisano łącznie {total} zdjęć ze wszystkich skanów.")
+        self.update_status(f"Successfully saved a total of {total} photos.")
+        messagebox.showinfo("Saved", f"Saved a total of {total} photos from all scans.")
 
     def rotate_left(self, event=None):
         focused = self.root.focus_get()
@@ -657,7 +657,7 @@ except Exception:
 
     def show_shortcuts_info(self):
         dialog = tk.Toplevel(self.root)
-        dialog.title("Skróty klawiszowe")
+        dialog.title("Keyboard shortcuts")
         dialog.configure(bg="#2b2b2b")
         dialog.transient(self.root)
         dialog.grab_set()
@@ -672,7 +672,7 @@ except Exception:
         
         title_lbl = tk.Label(
             dialog, 
-            text="Skróty klawiszowe w AutoCrop", 
+            text="Keyboard shortcuts in AutoCrop", 
             font=("Helvetica", 14, "bold"), 
             bg="#2b2b2b", 
             fg="#00ffff"
@@ -683,11 +683,11 @@ except Exception:
         list_frame.pack(fill=tk.BOTH, expand=True, padx=25)
         
         shortcuts = [
-            ("Tab", "Następne zdjęcie / skan"),
-            ("Shift + Tab", "Poprzednie zdjęcie / skan"),
-            ("←  (Strzałka w lewo)", "Obróć skan w lewo (o 90°)"),
-            ("→  (Strzałka w prawo)", "Obróć skan w prawo (o 90°)"),
-            ("Shift + Przeciąganie", "Prostowanie linii (pion / poziom)")
+            ("Tab", "Next image / scan"),
+            ("Shift + Tab", "Previous image / scan"),
+            ("←  (Left arrow)", "Rotate scan left (by 90°)"),
+            ("→  (Right arrow)", "Rotate scan right (by 90°)"),
+            ("Shift + Drag", "Straighten lines (vertical / horizontal)")
         ]
         
         for idx, (keys, desc) in enumerate(shortcuts):
@@ -715,7 +715,7 @@ except Exception:
             
         close_btn = tk.Button(
             dialog, 
-            text="Zamknij", 
+            text="Close", 
             command=dialog.destroy, 
             font=("Helvetica", 10, "bold"),
             bg="#3c3f41", 

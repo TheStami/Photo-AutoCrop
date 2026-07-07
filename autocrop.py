@@ -49,12 +49,12 @@ def crop_and_warp(img, box):
 
 def detect_boxes(image_path, min_area_ratio=0.02):
     """
-    Używa AI do znalezienia skrzynek (prostokątów) zdjęć na skanie.
-    Zwraca: (img, lista_prostokatow), gdzie prostokat to tablica 4 punktów.
+    Uses AI to find image bounding boxes on a scan.
+    Returns: (img, list_of_boxes), where a box is an array of 4 points.
     """
     img = cv2.imread(image_path)
     if img is None:
-        raise ValueError(f"Nie można wczytać obrazu: {image_path}")
+        raise ValueError(f"Could not load image: {image_path}")
         
     with open(image_path, 'rb') as i:
         input_data = i.read()
@@ -65,7 +65,7 @@ def detect_boxes(image_path, min_area_ratio=0.02):
     out_img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
     
     if out_img is None or out_img.shape[2] != 4:
-        raise ValueError(f"Brak przezroczystości (AI nie wykryło tła) w pliku {image_path}")
+        raise ValueError(f"No transparency (AI did not detect background) in file {image_path}")
         
     alpha = out_img[:, :, 3]
     _, thresh = cv2.threshold(alpha, 127, 255, cv2.THRESH_BINARY)
@@ -87,13 +87,13 @@ def detect_boxes(image_path, min_area_ratio=0.02):
 
 def process_image(image_path, output_dir, min_area_ratio=0.02):
     """
-    Funkcja używana w trybie CLI do automatycznego przycinania i zapisywania.
+    Function used in CLI mode for automatic cropping and saving.
     """
-    print(f"Rozpoczęto analizę AI: {os.path.basename(image_path)}")
+    print(f"AI analysis started: {os.path.basename(image_path)}")
     try:
         img, boxes = detect_boxes(image_path, min_area_ratio)
     except Exception as e:
-        print(f"Błąd: {e}")
+        print(f"Error: {e}")
         return False
         
     filename = os.path.basename(image_path)
@@ -104,18 +104,18 @@ def process_image(image_path, output_dir, min_area_ratio=0.02):
         out_filename = f"{name}_cropped_{count}{ext}" if count > 0 else f"{name}_cropped{ext}"
         out_path = os.path.join(output_dir, out_filename)
         cv2.imwrite(out_path, cropped)
-        print(f"Zapisano przycięte zdjęcie: {out_path}")
+        print(f"Saved cropped image: {out_path}")
         
     if not boxes:
-        print(f"AI nie znalazło żadnego zdjęcia na skanie: {image_path}")
+        print(f"AI found no images on scan: {image_path}")
         return False
         
     return True
 
 def main():
-    parser = argparse.ArgumentParser(description="Automatyczne przycinanie zeskanowanych zdjęć przy użyciu AI.")
-    parser.add_argument("-i", "--input", default="input", help="Folder ze zdjęciami do przycięcia.")
-    parser.add_argument("-o", "--output", default="output", help="Folder docelowy na przycięte zdjęcia.")
+    parser = argparse.ArgumentParser(description="Automatic cropping of scanned photos using AI.")
+    parser.add_argument("-i", "--input", default="input", help="Folder with photos to crop.")
+    parser.add_argument("-o", "--output", default="output", help="Target folder for cropped photos.")
     
     args = parser.parse_args()
     
@@ -123,9 +123,9 @@ def main():
         os.makedirs(args.output)
         
     if not os.path.exists(args.input):
-        print(f"Folder wejściowy '{args.input}' nie istnieje! Tworzę go.")
+        print(f"Input folder '{args.input}' does not exist! Creating it.")
         os.makedirs(args.input)
-        print("Umieść zdjęcia w folderze wejściowym i uruchom skrypt ponownie.")
+        print("Place photos in the input folder and run the script again.")
         return
         
     valid_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff"}
@@ -139,9 +139,9 @@ def main():
                 processed_count += 1
                 
     if processed_count == 0:
-        print("Brak plików do przetworzenia.")
+        print("No files to process.")
     else:
-        print(f"Zakończono! Przetworzono {processed_count} plików.")
+        print(f"Finished! Processed {processed_count} files.")
 
 if __name__ == "__main__":
     main()
