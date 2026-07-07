@@ -6,6 +6,8 @@ import queue
 import cv2
 from PIL import Image, ImageTk
 import numpy as np
+import subprocess
+import shutil
 
 from autocrop import detect_boxes, crop_and_warp
 
@@ -338,12 +340,99 @@ class AutoCropApp:
         if hasattr(self, 'active_box') and self.active_box is not None:
             self.update_preview()
 
+    def ask_directory(self, title="Wybierz folder", initial_dir=None):
+        # 1. Try XDG Desktop Portal via DBus (100% native dialogs for KDE/GNOME, like web browsers use)
+        portal_script = """
+import sys
+try:
+    import dbus
+    import dbus.mainloop.glib
+    from gi.repository import GLib
+    from urllib.parse import unquote
+except ImportError:
+    sys.exit(1)
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+bus = dbus.SessionBus()
+
+def on_response(response, results):
+    if response == 0:
+        uris = results.get('uris', [])
+        if uris:
+            path = str(uris[0])
+            if path.startswith('file://'):
+                print(unquote(path[7:]))
+    loop.quit()
+
+try:
+    portal = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
+    iface = dbus.Interface(portal, 'org.freedesktop.portal.FileChooser')
+    options = dbus.Dictionary({'directory': dbus.Boolean(True)}, signature='sv')
+    title = sys.argv[1] if len(sys.argv) > 1 else "Wybierz folder"
+    request_path = iface.OpenFile("", title, options)
+    bus.add_signal_receiver(on_response, dbus_interface='org.freedesktop.portal.Request', signal_name='Response', path=request_path)
+    loop = GLib.MainLoop()
+    loop.run()
+except Exception:
+    sys.exit(1)
+"""
+        import sys
+        import os
+        try:
+            env = os.environ.copy()
+            # Wymuszamy na systemowym portalu użycie backendu KDE (Dolphin), 
+            # nawet jeśli użytkownik ma środowisko GNOME.
+            env["XDG_CURRENT_DESKTOP"] = "KDE"
+            
+            result = subprocess.run([sys.executable, "-c", portal_script, title], capture_output=True, text=True, env=env)
+            if result.returncode == 0:
+                path = result.stdout.strip()
+                if path and os.path.isdir(path):
+                    return path
+                elif not path:
+                    return None  # User cancelled
+        except Exception as e:
+            print(f"Błąd uruchamiania portalu DBus: {e}")
+
+        # 2. Try KDE kdialog if available (perfect for KDE/Dolphin users)
+        if shutil.which("kdialog"):
+            cmd = ["kdialog", "--title", title, "--getexistingdirectory"]
+            if initial_dir and os.path.isdir(initial_dir):
+                cmd.append(os.path.abspath(initial_dir))
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                path = result.stdout.strip()
+                if path and os.path.isdir(path):
+                    return path
+            except subprocess.CalledProcessError:
+                return None
+            except Exception as e:
+                print(f"Błąd uruchamiania kdialog: {e}")
+
+        # 2. Try GTK zenity if available
+        if shutil.which("zenity"):
+            cmd = ["zenity", "--file-selection", "--directory", f"--title={title}"]
+            if initial_dir and os.path.isdir(initial_dir):
+                cmd.append(f"--filename={os.path.abspath(initial_dir)}/")
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                path = result.stdout.strip()
+                if path and os.path.isdir(path):
+                    return path
+            except subprocess.CalledProcessError:
+                return None
+            except Exception as e:
+                print(f"Błąd uruchamiania zenity: {e}")
+
+        # 3. Fallback to default Tkinter filedialog
+        return filedialog.askdirectory(title=title, initialdir=initial_dir)
+
     def browse_input(self):
-        folder = filedialog.askdirectory(initialdir=self.input_dir.get())
+        folder = self.ask_directory(title="Wybierz folder wejściowy (skany)", initial_dir=self.input_dir.get())
         if folder: self.input_dir.set(folder)
 
     def browse_output(self):
-        folder = filedialog.askdirectory(initialdir=self.output_dir.get())
+        folder = self.ask_directory(title="Wybierz folder wyjściowy", initial_dir=self.output_dir.get())
         if folder: self.output_dir.set(folder)
 
     def update_listbox(self):
